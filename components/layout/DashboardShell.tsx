@@ -28,6 +28,13 @@ export default function DashboardShell({ children, profile, user, isSuperAdmin, 
 
   const isCandidate = !isAdmin
 
+  interface NavItemType {
+    href: string
+    label: string
+    icon: React.ComponentType<{ size?: number; className?: string }>
+    exact?: boolean
+  }
+
   async function handleLogout() {
     await supabase.auth.signOut()
     toast.success('Até logo!')
@@ -66,7 +73,7 @@ export default function DashboardShell({ children, profile, user, isSuperAdmin, 
     return pathname === href || pathname.startsWith(href + '/')
   }
 
-  function NavItem({ href, label, icon: Icon, exact }: typeof allNav[0]) {
+  function NavItem({ href, label, icon: Icon, exact }: NavItemType) {
     const active = isActive(href, exact)
     return (
       <Link
