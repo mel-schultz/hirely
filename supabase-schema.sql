@@ -138,6 +138,13 @@ create policy "Admins can view all documents"
   );
 
 -- ============================================================
+-- UPDATE User Admin
+-- ============================================================
+UPDATE public.profiles
+SET role = 'admin'
+WHERE email = 'seu@email.com';
+
+-- ============================================================
 -- TRIGGER: Auto-update updated_at
 -- ============================================================
 create or replace function public.handle_updated_at()
