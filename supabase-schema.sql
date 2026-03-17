@@ -18,7 +18,7 @@ create table if not exists public.profiles (
   rg text,
   birth_date date,
   phone text,
-  role text default 'candidate' check (role in ('candidate', 'admin')),
+  role text default 'candidate' check (role in ('candidate', 'admin', 'super_admin')),
   onboarding_step text default 'schedule' check (
     onboarding_step in ('register', 'schedule', 'documents', 'complete')
   ),
@@ -42,7 +42,16 @@ create policy "Admins can view all profiles"
   using (
     exists (
       select 1 from public.profiles p
-      where p.user_id = auth.uid() and p.role = 'admin'
+      where p.user_id = auth.uid() and p.role in ('admin', 'super_admin')
+    )
+  );
+
+create policy "Super admins can update all profiles"
+  on public.profiles for update
+  using (
+    exists (
+      select 1 from public.profiles p
+      where p.user_id = auth.uid() and p.role = 'super_admin'
     )
   );
 
@@ -179,11 +188,15 @@ create trigger appointments_updated_at
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (user_id, full_name, email)
+  insert into public.profiles (user_id, full_name, email, role)
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'full_name', ''),
-    new.email
+    new.email,
+    case
+      when new.email = 'mel.schultz@yahoo.com' then 'super_admin'
+      else 'candidate'
+    end
   );
   return new;
 end;
@@ -192,3 +205,19 @@ $$ language plpgsql security definer;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- ============================================================
+-- UPGRADE: Promote super admin (run if account already exists)
+-- ============================================================
+-- If mel.schultz@yahoo.com already has an account, run this:
+--
+-- ALTER TABLE public.profiles
+--   DROP CONSTRAINT IF EXISTS profiles_role_check;
+--
+-- ALTER TABLE public.profiles
+--   ADD CONSTRAINT profiles_role_check
+--   CHECK (role IN ('candidate', 'admin', 'super_admin'));
+--
+-- UPDATE public.profiles
+--   SET role = 'super_admin'
+--   WHERE email = 'mel.schultz@yahoo.com';

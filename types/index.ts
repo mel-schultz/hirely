@@ -21,7 +21,7 @@ export interface Profile {
   rg?: string
   birth_date?: string
   phone?: string
-  role: 'candidate' | 'admin'
+  role: 'candidate' | 'admin' | 'super_admin'
   onboarding_step: OnboardingStep
   created_at: string
   updated_at: string

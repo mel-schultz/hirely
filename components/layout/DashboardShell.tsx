@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Calendar, FileText, User, LogOut,
-  Menu, X, ShieldCheck, ChevronRight
+  Menu, X, ShieldCheck, ChevronRight, Users
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
@@ -37,11 +37,14 @@ export default function DashboardShell({ children, profile, user }: Props) {
     router.refresh()
   }
 
-  const isAdmin = profile?.role === 'admin'
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin'
+  const isSuperAdmin = profile?.role === 'super_admin' || user?.email === 'mel.schultz@yahoo.com'
 
-  const allNavItems = isAdmin
-    ? [...navItems, { href: '/dashboard/admin', label: 'Admin', icon: ShieldCheck }]
-    : navItems
+  const allNavItems = [
+    ...navItems,
+    ...(isAdmin ? [{ href: '/dashboard/admin', label: 'Candidatos', icon: ShieldCheck }] : []),
+    ...(isAdmin ? [{ href: '/dashboard/users', label: 'Usuários', icon: Users }] : []),
+  ]
 
   const initials = profile?.full_name
     ?.split(' ')
