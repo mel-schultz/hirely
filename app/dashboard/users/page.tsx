@@ -1,25 +1,13 @@
+import { requireAuth } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
-import { SUPER_ADMIN_EMAIL } from '@/lib/constants'
+import { PageHeader } from '@/components/ui'
 import UsersManager from '@/components/admin/UsersManager'
 
+export const dynamic = 'force-dynamic'
+
 export default async function UsersPage() {
+  const { user, isSuperAdmin } = await requireAuth('admin')
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, email')
-    .eq('user_id', user.id)
-    .single()
-
-  // Only admin or super_admin can access
-  if (!profile || !['admin', 'super_admin'].includes(profile.role)) {
-    redirect('/dashboard')
-  }
-
-  const isSuperAdmin = profile.role === 'super_admin' || user.email === SUPER_ADMIN_EMAIL
 
   const { data: users } = await supabase
     .from('profiles')
@@ -29,17 +17,17 @@ export default async function UsersPage() {
   return (
     <div className="space-y-6">
       <div className="opacity-0 animate-fade-up" style={{ animationFillMode: 'forwards' }}>
-        <h1 className="font-display text-3xl font-bold text-white mb-2">
-          Gerenciar Usuários
-        </h1>
-        <p className="text-slate-400">
-          {isSuperAdmin
-            ? 'Crie, edite e exclua usuários do sistema.'
-            : 'Visualize os usuários cadastrados no sistema.'}
-        </p>
+        <PageHeader
+          title="Usuários"
+          description={
+            isSuperAdmin
+              ? 'Gerencie todos os usuários do sistema — crie, edite e controle permissões.'
+              : 'Visualize os usuários cadastrados no sistema.'
+          }
+          breadcrumb="Administração"
+        />
       </div>
-
-      <div className="opacity-0 animate-fade-up animate-delay-100" style={{ animationFillMode: 'forwards' }}>
+      <div className="opacity-0 animate-fade-up" style={{ animationFillMode: 'forwards', animationDelay: '80ms' }}>
         <UsersManager
           initialUsers={users ?? []}
           isSuperAdmin={isSuperAdmin}

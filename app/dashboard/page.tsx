@@ -1,46 +1,42 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import OnboardingTimeline from '@/components/OnboardingTimeline'
-import StatsRow from '@/components/StatsRow'
+import { requireAuth } from '@/lib/auth'
+import { createClient } from '@/lib/supabase/server'
+import AdminDashboard from '@/components/dashboard/AdminDashboard'
+import CandidateDashboard from '@/components/dashboard/CandidateDashboard'
+
+export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
+  const { user, profile, isAdmin, isSuperAdmin } = await requireAuth()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login')
 
-  const [{ data: profile }, { data: appointment }, { data: documents }] = await Promise.all([
-    supabase.from('profiles').select('*').eq('user_id', user.id).single(),
+  if (isAdmin) {
+    const [{ data: candidates }, { data: appointments }, { data: documents }] = await Promise.all([
+      supabase.from('profiles').select('*').eq('role', 'candidate').order('created_at', { ascending: false }),
+      supabase.from('appointments').select('*').order('created_at', { ascending: false }),
+      supabase.from('documents').select('*').order('uploaded_at', { ascending: false }),
+    ])
+    return (
+      <AdminDashboard
+        currentProfile={profile}
+        isSuperAdmin={isSuperAdmin}
+        candidates={candidates ?? []}
+        appointments={appointments ?? []}
+        documents={documents ?? []}
+      />
+    )
+  }
+
+  const [{ data: appointment }, { data: documents }] = await Promise.all([
     supabase.from('appointments').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1).single(),
     supabase.from('documents').select('*').eq('user_id', user.id).order('uploaded_at', { ascending: false }),
   ])
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="opacity-0 animate-fade-up" style={{ animationFillMode: 'forwards' }}>
-        <p className="text-slate-400 text-sm mb-1">Bem-vindo,</p>
-        <h1 className="font-display text-3xl font-bold text-white">
-          {profile?.full_name?.split(' ')[0] || 'Candidato'} 👋
-        </h1>
-      </div>
-
-      {/* Stats */}
-      <div className="opacity-0 animate-fade-up animate-delay-100" style={{ animationFillMode: 'forwards' }}>
-        <StatsRow
-          appointment={appointment}
-          documentsCount={documents?.length ?? 0}
-          step={profile?.onboarding_step ?? 'schedule'}
-        />
-      </div>
-
-      {/* Timeline */}
-      <div className="opacity-0 animate-fade-up animate-delay-200" style={{ animationFillMode: 'forwards' }}>
-        <OnboardingTimeline
-          profile={profile}
-          appointment={appointment}
-          documents={documents ?? []}
-        />
-      </div>
-    </div>
+    <CandidateDashboard
+      profile={profile}
+      appointment={appointment}
+      documents={documents ?? []}
+    />
   )
 }

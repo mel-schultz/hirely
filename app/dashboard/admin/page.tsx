@@ -1,47 +1,36 @@
+import { requireAuth } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { PageHeader } from '@/components/ui'
 import AdminCandidates from '@/components/admin/AdminCandidates'
 
-export default async function AdminPage() {
+export const dynamic = 'force-dynamic'
+
+export default async function CandidatesPage() {
+  const { isSuperAdmin } = await requireAuth('admin')
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('user_id', user.id)
-    .single()
-
-  if (profile?.role !== 'admin') redirect('/dashboard')
-
-  const { data: candidates } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('role', 'candidate')
-    .order('created_at', { ascending: false })
-
-  const { data: appointments } = await supabase
-    .from('appointments')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  const { data: documents } = await supabase
-    .from('documents')
-    .select('*')
-    .order('uploaded_at', { ascending: false })
+  const [{ data: candidates }, { data: appointments }, { data: documents }] = await Promise.all([
+    supabase.from('profiles').select('*').eq('role', 'candidate').order('created_at', { ascending: false }),
+    supabase.from('appointments').select('*').order('created_at', { ascending: false }),
+    supabase.from('documents').select('*').order('uploaded_at', { ascending: false }),
+  ])
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-3xl font-bold text-white mb-2">Painel Admin</h1>
-        <p className="text-slate-400">Acompanhe o status de admissão de todos os candidatos.</p>
+      <div className="opacity-0 animate-fade-up" style={{ animationFillMode: 'forwards' }}>
+        <PageHeader
+          title="Candidatos"
+          description="Acompanhe o status de admissão de todos os candidatos cadastrados."
+          breadcrumb="Administração"
+        />
       </div>
-      <AdminCandidates
-        candidates={candidates ?? []}
-        appointments={appointments ?? []}
-        documents={documents ?? []}
-      />
+      <div className="opacity-0 animate-fade-up" style={{ animationFillMode: 'forwards', animationDelay: '80ms' }}>
+        <AdminCandidates
+          candidates={candidates ?? []}
+          appointments={appointments ?? []}
+          documents={documents ?? []}
+        />
+      </div>
     </div>
   )
 }

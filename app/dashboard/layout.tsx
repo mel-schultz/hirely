@@ -1,21 +1,19 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { requireAuth } from '@/lib/auth'
 import DashboardShell from '@/components/layout/DashboardShell'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) redirect('/auth/login')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('user_id', user.id)
-    .single()
-
-  return <DashboardShell profile={profile} user={user}>{children}</DashboardShell>
+  const { user, profile, isSuperAdmin, isAdmin } = await requireAuth()
+  return (
+    <DashboardShell
+      profile={profile}
+      user={user}
+      isSuperAdmin={isSuperAdmin}
+      isAdmin={isAdmin}
+    >
+      {children}
+    </DashboardShell>
+  )
 }
