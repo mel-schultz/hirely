@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Calendar, FileText, User, LogOut,
-  Menu, X, Users, ChevronRight, Crown, Shield, UserCheck
+  Menu, X, Users, ChevronRight, Crown, Shield, UserCheck,
+  type LucideIcon
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
@@ -31,7 +32,7 @@ export default function DashboardShell({ children, profile, user, isSuperAdmin, 
   interface NavItemType {
     href: string
     label: string
-    icon: React.ComponentType<{ size?: number; className?: string }>
+    icon: LucideIcon
     exact?: boolean
   }
 
