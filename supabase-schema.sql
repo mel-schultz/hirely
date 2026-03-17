@@ -142,7 +142,7 @@ create policy "Admins can view all documents"
 -- ============================================================
 UPDATE public.profiles
 SET role = 'admin'
-WHERE email = 'seu@email.com';
+WHERE email = 'mel.schultz@yahoo.com';
 
 -- ============================================================
 -- TRIGGER: Auto-update updated_at
