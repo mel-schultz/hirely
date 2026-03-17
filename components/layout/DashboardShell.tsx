@@ -11,7 +11,7 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
-import { SUPER_ADMIN_EMAIL, ROLE_LABELS } from '@/lib/constants'
+import { ROLE_LABELS } from '@/lib/constants'
 
 interface Props {
   children: React.ReactNode
@@ -19,6 +19,13 @@ interface Props {
   user: any
   isSuperAdmin: boolean
   isAdmin: boolean
+}
+
+interface NavItemType {
+  href: string
+  label: string
+  icon: LucideIcon
+  exact?: boolean
 }
 
 export default function DashboardShell({ children, profile, user, isSuperAdmin, isAdmin }: Props) {
@@ -29,13 +36,6 @@ export default function DashboardShell({ children, profile, user, isSuperAdmin, 
 
   const computedRole = isSuperAdmin ? 'super_admin' : isAdmin ? 'admin' : 'candidate'
   const isCandidate = !isAdmin
-
-  interface NavItemType {
-    href: string
-    label: string
-    icon: LucideIcon
-    exact?: boolean
-  }
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -48,22 +48,19 @@ export default function DashboardShell({ children, profile, user, isSuperAdmin, 
     ?.split(' ').filter(Boolean).slice(0, 2)
     .map((n: string) => n[0]).join('').toUpperCase() || '?'
 
-  const computedRole = isSuperAdmin ? 'super_admin' : isAdmin ? 'admin' : 'candidate'
-
-  // ── Nav sections ─────────────────────────────────────────
-  const candidateNav = [
+  const candidateNav: NavItemType[] = [
     { href: '/dashboard', label: 'Início', icon: LayoutDashboard, exact: true },
     { href: '/dashboard/schedule', label: 'Agendamento', icon: Calendar },
     { href: '/dashboard/documents', label: 'Documentos', icon: FileText },
   ]
 
-  const adminNav = [
+  const adminNav: NavItemType[] = [
     { href: '/dashboard', label: 'Início', icon: LayoutDashboard, exact: true },
     { href: '/dashboard/admin', label: 'Candidatos', icon: UserCheck },
     { href: '/dashboard/users', label: 'Usuários', icon: Users },
   ]
 
-  const commonNav = [
+  const commonNav: NavItemType[] = [
     { href: '/dashboard/profile', label: 'Meu Perfil', icon: User },
   ]
 
@@ -101,7 +98,6 @@ export default function DashboardShell({ children, profile, user, isSuperAdmin, 
   function Sidebar({ onClose }: { onClose?: () => void }) {
     return (
       <div className="flex flex-col h-full">
-
         {/* Logo */}
         <div className="flex items-center justify-between px-5 py-5 border-b border-slate-800/80">
           <div className="flex items-center gap-2.5">
