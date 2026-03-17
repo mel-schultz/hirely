@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import ScheduleForm from '@/components/forms/ScheduleForm'
 
 export default async function SchedulePage() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 

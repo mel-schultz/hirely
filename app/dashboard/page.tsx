@@ -4,7 +4,7 @@ import OnboardingTimeline from '@/components/OnboardingTimeline'
 import StatsRow from '@/components/StatsRow'
 
 export default async function DashboardPage() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
