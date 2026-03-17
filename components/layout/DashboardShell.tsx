@@ -37,8 +37,9 @@ export default function DashboardShell({ children, profile, user }: Props) {
     router.refresh()
   }
 
-  const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin'
-  const isSuperAdmin = profile?.role === 'super_admin' || user?.email === 'mel.schultz@yahoo.com'
+  const SUPER_ADMIN = 'mel.schultz@yahoo.com'
+  const isSuperAdmin = profile?.role === 'super_admin' || user?.email === SUPER_ADMIN
+  const isAdmin = isSuperAdmin || profile?.role === 'admin'
 
   const allNavItems = [
     ...navItems,
@@ -99,12 +100,29 @@ export default function DashboardShell({ children, profile, user }: Props) {
         {/* User */}
         <div className="px-3 pb-4 border-t border-slate-800 pt-4 space-y-1">
           <div className="flex items-center gap-3 px-3 py-2 rounded-xl">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+            <div className={cn(
+              'w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0',
+              isSuperAdmin
+                ? 'bg-gradient-to-br from-purple-500 to-purple-700'
+                : isAdmin
+                ? 'bg-gradient-to-br from-brand-500 to-brand-700'
+                : 'bg-gradient-to-br from-slate-600 to-slate-800'
+            )}>
               {initials}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white text-sm font-medium truncate">{profile?.full_name || 'Usuário'}</p>
               <p className="text-slate-500 text-xs truncate">{user?.email}</p>
+              <span className={cn(
+                'inline-block text-xs font-medium rounded-full px-2 py-0.5 mt-0.5 border',
+                isSuperAdmin
+                  ? 'text-purple-400 bg-purple-500/10 border-purple-500/20'
+                  : isAdmin
+                  ? 'text-brand-400 bg-brand-500/10 border-brand-500/20'
+                  : 'text-slate-500 bg-slate-700/50 border-slate-600/50'
+              )}>
+                {isSuperAdmin ? '★ Super Admin' : isAdmin ? 'Admin' : 'Candidato'}
+              </span>
             </div>
           </div>
           <button
