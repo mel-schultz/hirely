@@ -18,7 +18,8 @@ export default async function ProfilePage() {
     ? 'text-brand-400 bg-brand-500/10 border-brand-500/20'
     : 'text-slate-400 bg-slate-700/50 border-slate-600/50'
 
-  const role = profile?.role ?? 'candidate'
+  // Use computed role — not raw DB value (may be stale)
+  const computedRole = isSuperAdmin ? 'super_admin' : isAdmin ? 'admin' : 'candidate'
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -46,7 +47,7 @@ export default async function ProfilePage() {
             <p className="text-slate-500 text-sm">{user.email}</p>
             <span className={cn('inline-flex items-center gap-1.5 text-xs font-medium border rounded-full px-2.5 py-0.5 mt-1.5', roleColor)}>
               <RoleIcon size={11} />
-              {ROLE_LABELS[role] ?? role}
+              {ROLE_LABELS[computedRole] ?? computedRole}
             </span>
           </div>
         </div>

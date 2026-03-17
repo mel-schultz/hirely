@@ -27,6 +27,7 @@ export default function DashboardShell({ children, profile, user, isSuperAdmin, 
   const supabase = createClient()
   const [mobileOpen, setMobileOpen] = useState(false)
 
+  const computedRole = isSuperAdmin ? 'super_admin' : isAdmin ? 'admin' : 'candidate'
   const isCandidate = !isAdmin
 
   interface NavItemType {
@@ -47,7 +48,7 @@ export default function DashboardShell({ children, profile, user, isSuperAdmin, 
     ?.split(' ').filter(Boolean).slice(0, 2)
     .map((n: string) => n[0]).join('').toUpperCase() || '?'
 
-  const role = profile?.role ?? 'candidate'
+  const computedRole = isSuperAdmin ? 'super_admin' : isAdmin ? 'admin' : 'candidate'
 
   // ── Nav sections ─────────────────────────────────────────
   const candidateNav = [
@@ -164,7 +165,7 @@ export default function DashboardShell({ children, profile, user, isSuperAdmin, 
                   'text-xs font-medium',
                   isSuperAdmin ? 'text-purple-400' : isAdmin ? 'text-brand-400' : 'text-slate-500'
                 )}>
-                  {ROLE_LABELS[role] ?? 'Candidato'}
+                  {ROLE_LABELS[computedRole] ?? 'Candidato'}
                 </span>
               </div>
             </div>
@@ -226,7 +227,7 @@ export default function DashboardShell({ children, profile, user, isSuperAdmin, 
                 : 'text-slate-500 bg-slate-700/50 border-slate-600/50'
             )}>
               {isSuperAdmin ? <Crown size={9} /> : isAdmin ? <Shield size={9} /> : <User size={9} />}
-              {ROLE_LABELS[role] ?? 'Candidato'}
+              {ROLE_LABELS[computedRole] ?? 'Candidato'}
             </span>
             <button onClick={() => setMobileOpen(true)} className="text-slate-400 hover:text-white transition-colors">
               <Menu size={20} />
