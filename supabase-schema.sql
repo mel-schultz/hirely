@@ -119,30 +119,40 @@ insert into storage.buckets (id, name, public)
 values ('documents', 'documents', false)
 on conflict (id) do nothing;
 
+-- Users can upload their own documents
 create policy "Users can upload own documents"
   on storage.objects for insert
-  with check (bucket_id = 'documents' and auth.uid()::text = (storage.foldername(name))[1]);
+  with check (
+    bucket_id = 'documents'
+    and auth.uid()::text = (storage.foldername(name))[1]
+  );
 
-create policy "Users can view own documents"
-  on storage.objects for select
-  using (bucket_id = 'documents' and auth.uid()::text = (storage.foldername(name))[1]);
-
-create policy "Admins can view all documents"
+-- Users can view/download their own documents (needed for signed URLs)
+create policy "Users can select own documents"
   on storage.objects for select
   using (
-    bucket_id = 'documents' and
-    exists (
+    bucket_id = 'documents'
+    and auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+-- Users can delete their own documents
+create policy "Users can delete own documents"
+  on storage.objects for delete
+  using (
+    bucket_id = 'documents'
+    and auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+-- Admins can view all documents
+create policy "Admins can select all documents"
+  on storage.objects for select
+  using (
+    bucket_id = 'documents'
+    and exists (
       select 1 from public.profiles p
       where p.user_id = auth.uid() and p.role = 'admin'
     )
   );
-
--- ============================================================
--- UPDATE User Admin
--- ============================================================
-UPDATE public.profiles
-SET role = 'admin'
-WHERE email = 'mel.schultz@yahoo.com';
 
 -- ============================================================
 -- TRIGGER: Auto-update updated_at
