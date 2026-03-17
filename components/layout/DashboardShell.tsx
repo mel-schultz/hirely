@@ -16,17 +16,16 @@ interface Props {
   children: React.ReactNode
   profile: any
   user: any
+  isSuperAdmin: boolean
+  isAdmin: boolean
 }
 
-export default function DashboardShell({ children, profile, user }: Props) {
+export default function DashboardShell({ children, profile, user, isSuperAdmin, isAdmin }: Props) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  const SUPER_ADMIN = SUPER_ADMIN_EMAIL
-  const isSuperAdmin = profile?.role === 'super_admin' || user?.email === SUPER_ADMIN
-  const isAdmin = isSuperAdmin || profile?.role === 'admin'
   const isCandidate = !isAdmin
 
   async function handleLogout() {
