@@ -1,5 +1,5 @@
 import { requireAuth } from '@/lib/auth'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { PageHeader } from '@/components/ui'
 import UsersManager from '@/components/admin/UsersManager'
 
@@ -7,9 +7,9 @@ export const dynamic = 'force-dynamic'
 
 export default async function UsersPage() {
   const { user, isSuperAdmin } = await requireAuth('admin')
-  const supabase = await createClient()
+  const admin = createAdminClient()
 
-  const { data: users } = await supabase
+  const { data: users } = await admin
     .from('profiles')
     .select('*')
     .order('created_at', { ascending: false })

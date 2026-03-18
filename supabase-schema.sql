@@ -1,171 +1,135 @@
 -- ============================================================
--- Hirely - Supabase Database Schema
--- Run this in your Supabase SQL Editor
+-- Hirely - Schema Completo e Definitivo
+-- Execute tudo de uma vez no SQL Editor do Supabase
 -- ============================================================
 
--- Enable UUID extension
 create extension if not exists "uuid-ossp";
 
 -- ============================================================
--- PROFILES
+-- TABELAS
 -- ============================================================
+
 create table if not exists public.profiles (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references auth.users(id) on delete cascade not null unique,
-  full_name text not null,
-  email text not null,
-  cpf text,
-  rg text,
-  birth_date date,
-  phone text,
-  role text default 'candidate' check (role in ('candidate', 'admin', 'super_admin')),
-  onboarding_step text default 'schedule' check (
-    onboarding_step in ('register', 'schedule', 'documents', 'complete')
-  ),
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  id            uuid default uuid_generate_v4() primary key,
+  user_id       uuid references auth.users(id) on delete cascade not null unique,
+  full_name     text not null default '',
+  email         text not null default '',
+  cpf           text,
+  rg            text,
+  birth_date    date,
+  phone         text,
+  role          text default 'candidate'
+                  check (role in ('candidate', 'admin', 'super_admin')),
+  onboarding_step text default 'schedule'
+                  check (onboarding_step in ('register', 'schedule', 'documents', 'complete')),
+  created_at    timestamptz default now(),
+  updated_at    timestamptz default now()
 );
 
--- RLS
-alter table public.profiles enable row level security;
-
-create policy "Users can view own profile"
-  on public.profiles for select
-  using (auth.uid() = user_id);
-
-create policy "Users can update own profile"
-  on public.profiles for update
-  using (auth.uid() = user_id);
-
-create policy "Admins can view all profiles"
-  on public.profiles for select
-  using (
-    exists (
-      select 1 from public.profiles p
-      where p.user_id = auth.uid() and p.role in ('admin', 'super_admin')
-    )
-  );
-
-create policy "Super admins can update all profiles"
-  on public.profiles for update
-  using (
-    exists (
-      select 1 from public.profiles p
-      where p.user_id = auth.uid() and p.role = 'super_admin'
-    )
-  );
-
--- ============================================================
--- APPOINTMENTS
--- ============================================================
 create table if not exists public.appointments (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references auth.users(id) on delete cascade not null,
-  clinic_name text not null,
-  clinic_address text not null,
-  clinic_phone text,
-  clinic_email text,
-  scheduled_date date not null,
-  scheduled_time time not null,
-  status text default 'pending' check (
-    status in ('pending', 'confirmed', 'completed', 'cancelled')
-  ),
-  notes text,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  id              uuid default uuid_generate_v4() primary key,
+  user_id         uuid references auth.users(id) on delete cascade not null,
+  clinic_name     text not null,
+  clinic_address  text not null,
+  clinic_phone    text,
+  clinic_email    text,
+  scheduled_date  date not null,
+  scheduled_time  time not null,
+  status          text default 'pending'
+                    check (status in ('pending', 'confirmed', 'completed', 'cancelled')),
+  notes           text,
+  created_at      timestamptz default now(),
+  updated_at      timestamptz default now()
 );
 
-alter table public.appointments enable row level security;
-
-create policy "Users can manage own appointments"
-  on public.appointments for all
-  using (auth.uid() = user_id);
-
-create policy "Admins can view all appointments"
-  on public.appointments for select
-  using (
-    exists (
-      select 1 from public.profiles p
-      where p.user_id = auth.uid() and p.role = 'admin'
-    )
-  );
-
--- ============================================================
--- DOCUMENTS
--- ============================================================
 create table if not exists public.documents (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references auth.users(id) on delete cascade not null,
-  type text not null check (
-    type in ('prontuario', 'guia_encaminhamento', 'aso', 'outros')
-  ),
-  file_name text not null,
-  file_url text not null,
-  file_size bigint not null,
-  notes text,
+  id          uuid default uuid_generate_v4() primary key,
+  user_id     uuid references auth.users(id) on delete cascade not null,
+  type        text not null
+                check (type in ('prontuario', 'guia_encaminhamento', 'aso', 'outros')),
+  file_name   text not null,
+  file_url    text not null,
+  file_size   bigint not null,
+  notes       text,
   uploaded_at timestamptz default now()
 );
 
-alter table public.documents enable row level security;
+-- ============================================================
+-- RLS — SEM SUBQUERIES (evita recursão infinita)
+-- ============================================================
 
-create policy "Users can manage own documents"
-  on public.documents for all
-  using (auth.uid() = user_id);
+alter table public.profiles    enable row level security;
+alter table public.appointments enable row level security;
+alter table public.documents   enable row level security;
 
-create policy "Admins can view all documents"
-  on public.documents for select
-  using (
-    exists (
-      select 1 from public.profiles p
-      where p.user_id = auth.uid() and p.role = 'admin'
-    )
-  );
+-- PROFILES: cada usuário acessa apenas o próprio registro
+create policy "profiles_select" on public.profiles
+  for select using (auth.uid() = user_id);
+
+create policy "profiles_insert" on public.profiles
+  for insert with check (auth.uid() = user_id);
+
+create policy "profiles_update" on public.profiles
+  for update using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "profiles_delete" on public.profiles
+  for delete using (auth.uid() = user_id);
+
+-- APPOINTMENTS
+create policy "appointments_select" on public.appointments
+  for select using (auth.uid() = user_id);
+
+create policy "appointments_insert" on public.appointments
+  for insert with check (auth.uid() = user_id);
+
+create policy "appointments_update" on public.appointments
+  for update using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "appointments_delete" on public.appointments
+  for delete using (auth.uid() = user_id);
+
+-- DOCUMENTS
+create policy "documents_select" on public.documents
+  for select using (auth.uid() = user_id);
+
+create policy "documents_insert" on public.documents
+  for insert with check (auth.uid() = user_id);
+
+create policy "documents_delete" on public.documents
+  for delete using (auth.uid() = user_id);
 
 -- ============================================================
--- STORAGE BUCKET
+-- STORAGE
 -- ============================================================
+
 insert into storage.buckets (id, name, public)
 values ('documents', 'documents', false)
 on conflict (id) do nothing;
 
--- Users can upload their own documents
-create policy "Users can upload own documents"
-  on storage.objects for insert
-  with check (
+create policy "storage_insert" on storage.objects
+  for insert with check (
     bucket_id = 'documents'
     and auth.uid()::text = (storage.foldername(name))[1]
   );
 
--- Users can view/download their own documents (needed for signed URLs)
-create policy "Users can select own documents"
-  on storage.objects for select
-  using (
+create policy "storage_select" on storage.objects
+  for select using (
     bucket_id = 'documents'
     and auth.uid()::text = (storage.foldername(name))[1]
   );
 
--- Users can delete their own documents
-create policy "Users can delete own documents"
-  on storage.objects for delete
-  using (
+create policy "storage_delete" on storage.objects
+  for delete using (
     bucket_id = 'documents'
     and auth.uid()::text = (storage.foldername(name))[1]
-  );
-
--- Admins can view all documents
-create policy "Admins can select all documents"
-  on storage.objects for select
-  using (
-    bucket_id = 'documents'
-    and exists (
-      select 1 from public.profiles p
-      where p.user_id = auth.uid() and p.role = 'admin'
-    )
   );
 
 -- ============================================================
--- TRIGGER: Auto-update updated_at
+-- TRIGGERS
 -- ============================================================
+
 create or replace function public.handle_updated_at()
 returns trigger as $$
 begin
@@ -173,6 +137,9 @@ begin
   return new;
 end;
 $$ language plpgsql;
+
+drop trigger if exists profiles_updated_at    on public.profiles;
+drop trigger if exists appointments_updated_at on public.appointments;
 
 create trigger profiles_updated_at
   before update on public.profiles
@@ -182,9 +149,7 @@ create trigger appointments_updated_at
   before update on public.appointments
   for each row execute procedure public.handle_updated_at();
 
--- ============================================================
--- TRIGGER: Auto-create profile on signup
--- ============================================================
+-- Auto-cria perfil ao cadastrar (super_admin para email fixo)
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
@@ -197,27 +162,39 @@ begin
       when new.email = 'mel.schultz@yahoo.com' then 'super_admin'
       else 'candidate'
     end
-  );
+  )
+  on conflict (user_id) do nothing;
   return new;
 end;
 $$ language plpgsql security definer;
+
+drop trigger if exists on_auth_user_created on auth.users;
 
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
 -- ============================================================
--- UPGRADE: Promote super admin (run if account already exists)
+-- INSERIR PERFIL PARA USUÁRIOS JÁ CADASTRADOS
+-- (caso o trigger não tenha rodado antes)
 -- ============================================================
--- If mel.schultz@yahoo.com already has an account, run this:
---
--- ALTER TABLE public.profiles
---   DROP CONSTRAINT IF EXISTS profiles_role_check;
---
--- ALTER TABLE public.profiles
---   ADD CONSTRAINT profiles_role_check
---   CHECK (role IN ('candidate', 'admin', 'super_admin'));
---
--- UPDATE public.profiles
---   SET role = 'super_admin'
---   WHERE email = 'mel.schultz@yahoo.com';
+
+insert into public.profiles (user_id, full_name, email, role)
+select
+  u.id,
+  coalesce(u.raw_user_meta_data->>'full_name', ''),
+  u.email,
+  case
+    when u.email = 'mel.schultz@yahoo.com' then 'super_admin'
+    else 'candidate'
+  end
+from auth.users u
+where not exists (
+  select 1 from public.profiles p where p.user_id = u.id
+);
+
+-- ============================================================
+-- VERIFICAR RESULTADO
+-- ============================================================
+
+select email, role, created_at from public.profiles order by created_at;
