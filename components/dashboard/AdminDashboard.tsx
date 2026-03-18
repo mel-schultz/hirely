@@ -3,11 +3,11 @@
 import Link from 'next/link'
 import {
   Users, Calendar, FileText, CheckCircle2, Clock,
-  AlertCircle, ArrowRight, TrendingUp, Crown, Shield
+  AlertCircle, ArrowRight, Crown, Shield
 } from 'lucide-react'
 import { cn, formatDateShort, getDocumentLabel } from '@/lib/utils'
 import { Badge } from '@/components/ui'
-import { ROLE_LABELS } from '@/lib/constants'
+import AppointmentsCalendar from '@/components/admin/AppointmentsCalendar'
 
 interface Props {
   currentProfile: any
@@ -195,10 +195,21 @@ export default function AdminDashboard({
         </div>
       </div>
 
-      {/* Quick access */}
+      {/* Appointments Calendar */}
       <div
         className="opacity-0 animate-fade-up"
         style={{ animationFillMode: 'forwards', animationDelay: '240ms' }}
+      >
+        <AppointmentsCalendar
+          appointments={appointments}
+          candidates={candidates}
+        />
+      </div>
+
+      {/* Quick access */}
+      <div
+        className="opacity-0 animate-fade-up"
+        style={{ animationFillMode: 'forwards', animationDelay: '320ms' }}
       >
         <h2 className="font-semibold text-white mb-3">Acesso rápido</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
