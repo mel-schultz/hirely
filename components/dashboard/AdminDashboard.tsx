@@ -2,10 +2,10 @@
 
 import Link from 'next/link'
 import {
-  Users, Calendar, FileText, CheckCircle2, Clock,
-  AlertCircle, ArrowRight, Crown, Shield
+  Users, Calendar, FileText, CheckCircle2,
+  Clock, AlertCircle, ArrowRight, Crown, Shield
 } from 'lucide-react'
-import { cn, formatDateShort, getDocumentLabel } from '@/lib/utils'
+import { cn, getDocumentLabel } from '@/lib/utils'
 import { Badge } from '@/components/ui'
 import AppointmentsCalendar from '@/components/admin/AppointmentsCalendar'
 
@@ -22,48 +22,44 @@ export default function AdminDashboard({
 }: Props) {
   const firstName = currentProfile?.full_name?.split(' ')[0] || 'Admin'
 
-  // Metrics
   const total = candidates.length
   const complete = candidates.filter(c => {
     const hasAppt = appointments.some(a => a.user_id === c.user_id)
-    const hasDocs = documents.some(d => d.user_id === c.user_id)
+    const hasDocs  = documents.some(d => d.user_id === c.user_id)
     return hasAppt && hasDocs
   }).length
   const waitingDocs = candidates.filter(c => {
     const hasAppt = appointments.some(a => a.user_id === c.user_id)
-    const hasDocs = documents.some(d => d.user_id === c.user_id)
+    const hasDocs  = documents.some(d => d.user_id === c.user_id)
     return hasAppt && !hasDocs
   }).length
   const notStarted = candidates.filter(c =>
     !appointments.some(a => a.user_id === c.user_id)
   ).length
 
-  // Recent candidates (last 5)
   const recentCandidates = candidates.slice(0, 5)
-
-  // Recent documents (last 5)
-  const recentDocuments = documents.slice(0, 5)
+  const recentDocuments  = documents.slice(0, 5)
 
   const metrics = [
-    { label: 'Total de candidatos', value: total, icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-    { label: 'Concluídos', value: complete, icon: CheckCircle2, color: 'text-brand-400', bg: 'bg-brand-500/10' },
-    { label: 'Aguardando docs', value: waitingDocs, icon: Clock, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-    { label: 'Não iniciados', value: notStarted, icon: AlertCircle, color: 'text-slate-400', bg: 'bg-slate-700/50' },
+    { label: 'Total de candidatos', value: total,       icon: Users,        color: 'text-blue-400',   bg: 'bg-blue-500/10'   },
+    { label: 'Concluídos',          value: complete,    icon: CheckCircle2, color: 'text-brand-400',  bg: 'bg-brand-500/10'  },
+    { label: 'Aguardando docs',     value: waitingDocs, icon: Clock,        color: 'text-amber-400',  bg: 'bg-amber-500/10'  },
+    { label: 'Não iniciados',       value: notStarted,  icon: AlertCircle,  color: 'text-slate-400',  bg: 'bg-slate-700/50'  },
   ]
 
-  function getCandidateStatus(candidate: any) {
-    const hasAppt = appointments.some(a => a.user_id === candidate.user_id)
-    const hasDocs = documents.some(d => d.user_id === candidate.user_id)
-    if (hasAppt && hasDocs) return { label: 'Concluído', variant: 'green' as const }
-    if (hasAppt) return { label: 'Aguardando docs', variant: 'amber' as const }
-    return { label: 'Não iniciado', variant: 'slate' as const }
+  function getCandidateStatus(c: any) {
+    const hasAppt = appointments.some(a => a.user_id === c.user_id)
+    const hasDocs  = documents.some(d => d.user_id === c.user_id)
+    if (hasAppt && hasDocs) return { label: 'Concluído',        variant: 'green'  as const }
+    if (hasAppt)            return { label: 'Aguardando docs',  variant: 'amber'  as const }
+    return                         { label: 'Não iniciado',     variant: 'slate'  as const }
   }
 
   return (
     <div className="space-y-8">
 
-      {/* Welcome */}
-      <div className="opacity-0 animate-fade-up" style={{ animationFillMode: 'forwards' }}>
+      {/* ── Welcome ───────────────────────────────────────── */}
+      <div>
         <div className="flex items-center gap-2 mb-1">
           {isSuperAdmin
             ? <Crown size={16} className="text-purple-400" />
@@ -73,19 +69,12 @@ export default function AdminDashboard({
             {isSuperAdmin ? 'Super Admin' : 'Administrador'}
           </p>
         </div>
-        <h1 className="font-display text-3xl font-bold text-white">
-          Olá, {firstName} 👋
-        </h1>
-        <p className="text-slate-400 text-sm mt-1">
-          Aqui está um resumo do processo de admissão.
-        </p>
+        <h1 className="font-display text-3xl font-bold text-white">Olá, {firstName} 👋</h1>
+        <p className="text-slate-400 text-sm mt-1">Aqui está um resumo do processo de admissão.</p>
       </div>
 
-      {/* Metrics */}
-      <div
-        className="opacity-0 animate-fade-up grid grid-cols-2 lg:grid-cols-4 gap-4"
-        style={{ animationFillMode: 'forwards', animationDelay: '80ms' }}
-      >
+      {/* ── Metrics ───────────────────────────────────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {metrics.map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="glass-card p-5">
             <div className="flex items-start justify-between mb-3">
@@ -98,8 +87,8 @@ export default function AdminDashboard({
             {total > 0 && (
               <div className="mt-2 h-1 bg-slate-800 rounded-full overflow-hidden">
                 <div
-                  className={cn('h-full rounded-full', color.replace('text-', 'bg-').replace('-400', '-500'))}
-                  style={{ width: `${Math.round((value / total) * 100)}%`, opacity: 0.6 }}
+                  className="h-full rounded-full bg-current opacity-60 transition-all duration-700"
+                  style={{ width: `${Math.round((value / total) * 100)}%`, color: color.replace('text-', '') }}
                 />
               </div>
             )}
@@ -107,11 +96,15 @@ export default function AdminDashboard({
         ))}
       </div>
 
-      {/* Two column layout */}
-      <div
-        className="opacity-0 animate-fade-up grid grid-cols-1 lg:grid-cols-2 gap-6"
-        style={{ animationFillMode: 'forwards', animationDelay: '160ms' }}
-      >
+      {/* ── Calendar ──────────────────────────────────────── */}
+      <AppointmentsCalendar
+        appointments={appointments}
+        candidates={candidates}
+      />
+
+      {/* ── Recent activity ───────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
         {/* Recent candidates */}
         <div className="glass-card p-5">
           <div className="flex items-center justify-between mb-5">
@@ -119,14 +112,11 @@ export default function AdminDashboard({
               <h3 className="font-semibold text-white">Candidatos recentes</h3>
               <p className="text-slate-500 text-xs mt-0.5">Últimos {recentCandidates.length} cadastrados</p>
             </div>
-            <Link
-              href="/dashboard/admin"
-              className="text-brand-400 hover:text-brand-300 text-xs font-medium flex items-center gap-1 transition-colors"
-            >
+            <Link href="/dashboard/admin"
+              className="text-brand-400 hover:text-brand-300 text-xs font-medium flex items-center gap-1 transition-colors">
               Ver todos <ArrowRight size={12} />
             </Link>
           </div>
-
           {recentCandidates.length === 0 ? (
             <p className="text-slate-600 text-sm text-center py-6">Nenhum candidato ainda</p>
           ) : (
@@ -159,14 +149,11 @@ export default function AdminDashboard({
               <h3 className="font-semibold text-white">Documentos recentes</h3>
               <p className="text-slate-500 text-xs mt-0.5">Últimos {recentDocuments.length} enviados</p>
             </div>
-            <Link
-              href="/dashboard/admin"
-              className="text-brand-400 hover:text-brand-300 text-xs font-medium flex items-center gap-1 transition-colors"
-            >
+            <Link href="/dashboard/admin"
+              className="text-brand-400 hover:text-brand-300 text-xs font-medium flex items-center gap-1 transition-colors">
               Ver todos <ArrowRight size={12} />
             </Link>
           </div>
-
           {recentDocuments.length === 0 ? (
             <p className="text-slate-600 text-sm text-center py-6">Nenhum documento enviado ainda</p>
           ) : (
@@ -195,55 +182,16 @@ export default function AdminDashboard({
         </div>
       </div>
 
-      {/* Appointments Calendar */}
-      <div
-        className="opacity-0 animate-fade-up"
-        style={{ animationFillMode: 'forwards', animationDelay: '240ms' }}
-      >
-        <AppointmentsCalendar
-          appointments={appointments}
-          candidates={candidates}
-        />
-      </div>
-
-      {/* Quick access */}
-      <div
-        className="opacity-0 animate-fade-up"
-        style={{ animationFillMode: 'forwards', animationDelay: '320ms' }}
-      >
+      {/* ── Quick access ──────────────────────────────────── */}
+      <div>
         <h2 className="font-semibold text-white mb-3">Acesso rápido</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
-            {
-              href: '/dashboard/admin',
-              icon: Users,
-              label: 'Candidatos',
-              desc: 'Ver todos os candidatos e status',
-              color: 'text-brand-400',
-              bg: 'bg-brand-500/10',
-            },
-            {
-              href: '/dashboard/users',
-              icon: Shield,
-              label: 'Usuários',
-              desc: isSuperAdmin ? 'Gerenciar todos os usuários' : 'Ver usuários do sistema',
-              color: 'text-purple-400',
-              bg: 'bg-purple-500/10',
-            },
-            {
-              href: '/dashboard/profile',
-              icon: Crown,
-              label: 'Meu perfil',
-              desc: 'Atualizar suas informações',
-              color: 'text-amber-400',
-              bg: 'bg-amber-500/10',
-            },
+            { href: '/dashboard/admin',   icon: Users,    label: 'Candidatos', desc: 'Ver todos os candidatos e status',                              color: 'text-brand-400',  bg: 'bg-brand-500/10'  },
+            { href: '/dashboard/users',   icon: Shield,   label: 'Usuários',   desc: isSuperAdmin ? 'Gerenciar todos os usuários' : 'Ver usuários',    color: 'text-purple-400', bg: 'bg-purple-500/10' },
+            { href: '/dashboard/profile', icon: Crown,    label: 'Meu perfil', desc: 'Atualizar suas informações',                                     color: 'text-amber-400',  bg: 'bg-amber-500/10'  },
           ].map(({ href, icon: Icon, label, desc, color, bg }) => (
-            <Link
-              key={href}
-              href={href}
-              className="glass-card-hover p-4 flex items-center gap-4 group"
-            >
+            <Link key={href} href={href} className="glass-card-hover p-4 flex items-center gap-4 group">
               <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0', bg)}>
                 <Icon size={18} className={color} />
               </div>
@@ -256,6 +204,7 @@ export default function AdminDashboard({
           ))}
         </div>
       </div>
+
     </div>
   )
 }
